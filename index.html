@@ -2,120 +2,565 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Clario MVP</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clario MVP - Single File</title>
   <style>
-    body {
-      margin:0;
-      font-family: Arial;
-      background:#071a2f;
-      color:white;
+    * { box-sizing: border-box; }
+    :root{
+      --bg:#071a2f;
+      --card:#091b39;
+      --line:rgba(255,255,255,.08);
+      --text:#f5f8fc;
+      --muted:#aab6c8;
+      --accent:#35e0c4;
+      --accent2:#5b4bff;
     }
-    .container{
-      padding:20px;
-      max-width:900px;
-      margin:auto;
+    html,body{
+      margin:0; min-height:100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(91,75,255,.25), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(53,224,196,.16), transparent 24%),
+        linear-gradient(135deg, #020b1c 0%, #071a2f 45%, #08152b 100%);
+      color:var(--text);
     }
-    h1{color:#35e0c4;}
-    input, textarea, select{
-      width:100%;
-      margin:8px 0;
-      padding:10px;
-      border-radius:8px;
-      border:none;
+    .app-shell{ display:grid; grid-template-columns:270px 1fr; min-height:100vh; }
+    .sidebar{
+      padding:24px; border-right:1px solid var(--line);
+      background:rgba(2,10,24,.72); backdrop-filter: blur(10px);
     }
-    button{
-      padding:10px 15px;
-      border:none;
-      background:#35e0c4;
-      color:#002;
-      border-radius:8px;
-      cursor:pointer;
+    .brand{ display:flex; gap:14px; align-items:center; margin-bottom:24px; }
+    .brand-mark{
+      width:52px;height:52px;border-radius:18px; display:grid;place-items:center;
+      font-size:28px;font-weight:800;
+      background:linear-gradient(135deg,var(--accent2),var(--accent));
     }
+    .brand-title{ font-size:28px; letter-spacing:.22em; font-weight:800; }
+    .brand-sub{ color:var(--accent); text-transform:uppercase; font-size:12px; letter-spacing:.18em; }
+    .nav{ display:grid; gap:10px; }
+    .nav-btn{
+      border:1px solid var(--line); background:#0a1f40; color:var(--text);
+      border-radius:14px; padding:14px 16px; text-align:left; cursor:pointer;
+    }
+    .nav-btn.active{ border-color:rgba(53,224,196,.4); background:linear-gradient(180deg,#0e2851,#0a1f40); }
+    .sidebar-card{
+      margin-top:24px; padding:16px; border-radius:18px;
+      background:linear-gradient(180deg, rgba(91,75,255,.16), rgba(53,224,196,.08));
+      border:1px solid var(--line);
+    }
+    .label{ color:var(--accent); text-transform:uppercase; font-size:11px; letter-spacing:.14em; }
+    .big{ font-size:24px; font-weight:800; margin-top:8px; }
+    .small{ color:var(--muted); margin-top:6px; font-size:14px; line-height:1.4; }
+    .main{ padding:28px; }
+    .hero{
+      display:flex; justify-content:space-between; gap:20px; align-items:flex-start;
+      padding:26px; border:1px solid var(--line); border-radius:24px;
+      background:linear-gradient(180deg, rgba(6,19,42,.82), rgba(9,27,57,.9));
+      margin-bottom:22px;
+    }
+    .eyebrow{ color:var(--accent); letter-spacing:.16em; text-transform:uppercase; font-size:12px; margin:0 0 8px; }
+    .hero h1{ font-size:38px; line-height:1.08; margin:0 0 10px; max-width:760px; }
+    .muted{ color:var(--muted); line-height:1.5; }
+    .hero-actions{ display:flex; gap:12px; flex-wrap:wrap; }
+    button.primary, button.secondary, .tiny{
+      border:none; border-radius:14px; padding:12px 18px; font-weight:700; cursor:pointer;
+    }
+    button.primary{ background:linear-gradient(135deg,var(--accent),#5df0d7); color:#032329; }
+    button.secondary, .tiny{ background:#183664; color:white; border:1px solid var(--line); }
+    .grid{ display:grid; gap:18px; margin-bottom:18px; }
+    .grid.two{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    .grid.three{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
     .card{
-      background:#091b39;
-      padding:15px;
-      border-radius:10px;
-      margin-top:15px;
+      border:1px solid var(--line); border-radius:22px; padding:22px;
+      background:linear-gradient(180deg, rgba(8,24,50,.94), rgba(7,22,45,.88));
+      box-shadow:0 20px 60px rgba(0,0,0,.18);
+    }
+    .section-title{ font-size:21px; font-weight:800; margin-bottom:16px; }
+    .progress-wrap{ display:grid; gap:10px; }
+    .progress-bar{ width:100%; height:12px; border-radius:999px; background:#102849; overflow:hidden; }
+    .progress-bar span{
+      display:block; height:100%; width:0;
+      background:linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius:999px;
+    }
+    .progress-text{ color:var(--muted); font-size:14px; }
+    .check-list{ margin:14px 0 0; padding-left:18px; color:var(--muted); line-height:1.7; }
+    .stat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+    .stat{
+      border:1px solid var(--line); border-radius:16px; padding:14px; background:rgba(255,255,255,.02);
+    }
+    .stat span{ display:block; color:var(--muted); font-size:13px; margin-bottom:6px; }
+    .stat strong{ font-size:18px; }
+    .form-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+    label{ display:grid; gap:8px; }
+    label.wide, .wide{ grid-column:1 / -1; }
+    input, select, textarea{
+      width:100%; background:#091b39; color:var(--text);
+      border:1px solid rgba(255,255,255,.09); border-radius:14px; padding:12px 14px; font:inherit;
+    }
+    textarea{ resize:vertical; }
+    .form-actions{ display:flex; justify-content:flex-end; gap:12px; }
+    .stack{ display:grid; gap:12px; }
+    .item{
+      display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
+      padding:14px; border-radius:16px; background:rgba(255,255,255,.025); border:1px solid var(--line);
+    }
+    .item strong{ display:block; margin-bottom:4px; }
+    .item small{ color:var(--muted); line-height:1.4; }
+    .item-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .tiny.done{ background:#114e46; }
+    .ai-output{
+      margin-top:18px; min-height:120px; white-space:pre-wrap;
+      padding:18px; border-radius:18px; background:rgba(255,255,255,.03);
+      border:1px solid var(--line); line-height:1.6;
+    }
+    .tab{ display:none; }
+    .tab.active{ display:block; }
+    @media (max-width: 980px){
+      .app-shell{ grid-template-columns:1fr; }
+      .sidebar{ border-right:none; border-bottom:1px solid var(--line); }
+      .hero{ flex-direction:column; }
+      .grid.two,.grid.three,.form-grid,.stat-grid{ grid-template-columns:1fr; }
     }
   </style>
 </head>
-
 <body>
-<div class="container">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">C</div>
+        <div>
+          <div class="brand-title">CLARIO</div>
+          <div class="brand-sub">fase 1 MVP</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+        <button class="nav-btn" data-tab="intake">Intake</button>
+        <button class="nav-btn" data-tab="documenten">Documenten</button>
+        <button class="nav-btn" data-tab="herinneringen">Herinneringen</button>
+        <button class="nav-btn" data-tab="ai">AI Hulp</button>
+      </nav>
+      <div class="sidebar-card">
+        <div class="label">Demo status</div>
+        <div class="big">66% compleet</div>
+        <div class="small">Alles staat in 1 HTML-bestand en werkt lokaal én op GitHub Pages.</div>
+      </div>
+    </aside>
 
-<h1>Clario MVP</h1>
+    <main class="main">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">FROM CHAOS TO CLARITY</p>
+          <h1>Clario fase 1 — single file demo.</h1>
+          <p class="muted">Intake, overzicht, documenten, reminders en simpele AI-hulp in één enkel HTML-bestand.</p>
+        </div>
+        <div class="hero-actions">
+          <button id="seedDemo" class="secondary" type="button">Demo-data laden</button>
+          <button id="resetData" class="primary" type="button">Reset app</button>
+        </div>
+      </header>
 
-<h2>Intake</h2>
-<input id="name" placeholder="Naam"/>
-<input id="age" placeholder="Leeftijd"/>
-<select id="family">
-  <option value="">Gezinssituatie</option>
-  <option>Alleenstaand</option>
-  <option>Getrouwd</option>
-</select>
-<textarea id="question" placeholder="Wat wil je weten?"></textarea>
+      <section id="dashboard" class="tab active">
+        <div class="grid two">
+          <div class="card">
+            <div class="section-title">Jouw voortgang</div>
+            <div class="progress-wrap">
+              <div class="progress-bar"><span id="progressFill"></span></div>
+              <div id="progressText" class="progress-text"></div>
+            </div>
+            <ul id="progressList" class="check-list"></ul>
+          </div>
+          <div class="card">
+            <div class="section-title">Profiel</div>
+            <div class="stat-grid">
+              <div class="stat"><span>Naam</span><strong id="profileName">Nog niet ingevuld</strong></div>
+              <div class="stat"><span>Leeftijd</span><strong id="profileAge">-</strong></div>
+              <div class="stat"><span>Gezinssituatie</span><strong id="profileFamily">-</strong></div>
+              <div class="stat"><span>Documenten</span><strong id="docCount">0</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="grid three">
+          <div class="card"><div class="section-title">Volgende stap</div><p id="nextStep">Start met de intake om jouw situatie vast te leggen.</p></div>
+          <div class="card"><div class="section-title">Open reminders</div><p id="reminderCount">0 open herinneringen</p></div>
+          <div class="card"><div class="section-title">AI suggestie</div><p id="aiSuggestion">Vul eerst je intake in voor persoonlijk advies.</p></div>
+        </div>
+      </section>
 
-<button onclick="save()">Opslaan</button>
+      <section id="intake" class="tab">
+        <div class="card">
+          <div class="section-title">Persoonlijke intake</div>
+          <form id="intakeForm" class="form-grid">
+            <label><span>Naam</span><input type="text" name="name" placeholder="Bijv. Bart Jansen" /></label>
+            <label><span>Leeftijd</span><input type="number" name="age" placeholder="Bijv. 42" /></label>
+            <label>
+              <span>Gezinssituatie</span>
+              <select name="family">
+                <option value="">Kies...</option>
+                <option>Alleenstaand</option>
+                <option>Samenwonend</option>
+                <option>Getrouwd</option>
+                <option>Gescheiden</option>
+              </select>
+            </label>
+            <label><span>Kinderen</span><input type="number" name="children" min="0" placeholder="0" /></label>
+            <label class="wide"><span>Belangrijkste vraag</span><textarea name="question" rows="4" placeholder="Waar wil je vooral duidelijkheid over?"></textarea></label>
+            <label class="wide"><span>Bijzonderheden</span><textarea name="notes" rows="4" placeholder="Bijv. eigen woning, onderneming, samengesteld gezin..."></textarea></label>
+            <div class="wide form-actions"><button type="submit" class="primary">Opslaan</button></div>
+          </form>
+        </div>
+      </section>
 
-<div class="card">
-  <h2>Dashboard</h2>
-  <p id="output">Nog geen data</p>
-</div>
+      <section id="documenten" class="tab">
+        <div class="grid two">
+          <div class="card">
+            <div class="section-title">Document toevoegen</div>
+            <form id="docForm" class="form-grid">
+              <label><span>Titel</span><input type="text" name="title" placeholder="Bijv. Testament 2021" required /></label>
+              <label>
+                <span>Type</span>
+                <select name="type">
+                  <option>Testament</option>
+                  <option>Polis</option>
+                  <option>Contract</option>
+                  <option>ID / Persoonsdocument</option>
+                  <option>Overig</option>
+                </select>
+              </label>
+              <label class="wide"><span>Notitie</span><textarea name="note" rows="3" placeholder="Korte omschrijving"></textarea></label>
+              <div class="wide form-actions"><button type="submit" class="primary">Toevoegen</button></div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="section-title">Documentenlijst</div>
+            <div id="docList" class="stack"></div>
+          </div>
+        </div>
+      </section>
 
-<div class="card">
-  <h2>AI hulp (demo)</h2>
-  <textarea id="aiInput" placeholder="Stel je vraag"></textarea>
-  <button onclick="askAI()">Vraag</button>
-  <p id="aiOutput"></p>
-</div>
+      <section id="herinneringen" class="tab">
+        <div class="grid two">
+          <div class="card">
+            <div class="section-title">Nieuwe herinnering</div>
+            <form id="reminderForm" class="form-grid">
+              <label><span>Titel</span><input type="text" name="title" placeholder="Bijv. Bel notaris" required /></label>
+              <label><span>Deadline</span><input type="date" name="date" required /></label>
+              <div class="wide form-actions"><button type="submit" class="primary">Toevoegen</button></div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="section-title">Taken & reminders</div>
+            <div id="reminderList" class="stack"></div>
+          </div>
+        </div>
+      </section>
 
-</div>
+      <section id="ai" class="tab">
+        <div class="card">
+          <div class="section-title">AI hulp (simpele fase 1 versie)</div>
+          <p class="muted">Deze demo gebruikt geen echte AI-API, maar geeft slimme, op intake gebaseerde suggesties.</p>
+          <textarea id="aiInput" rows="5" placeholder="Stel je vraag, bijvoorbeeld: Wat moet ik als eerste regelen?"></textarea>
+          <div class="form-actions"><button id="askAi" class="primary" type="button">Vraag AI</button></div>
+          <div id="aiOutput" class="ai-output">Nog geen vraag gesteld.</div>
+        </div>
+      </section>
+    </main>
+  </div>
 
-<script>
+  <script>
+    const STORAGE_KEY = 'clario-mvp-single-file-v1';
+    const defaultState = {
+      profile: { name:'', age:'', family:'', children:'', question:'', notes:'' },
+      documents: [],
+      reminders: []
+    };
 
-function save(){
-  const data = {
-    name:document.getElementById("name").value,
-    age:document.getElementById("age").value,
-    family:document.getElementById("family").value,
-    question:document.getElementById("question").value
-  }
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultState));
+      } catch {
+        return JSON.parse(JSON.stringify(defaultState));
+      }
+    }
 
-  localStorage.setItem("clario", JSON.stringify(data))
-  render()
-}
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
 
-function render(){
-  const data = JSON.parse(localStorage.getItem("clario") || "{}")
+    let state = loadState();
 
-  document.getElementById("output").innerText =
-    data.name ? 
-    "Welkom " + data.name + "\\nVraag: " + data.question :
-    "Nog geen data"
-}
+    const tabs = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.tab');
 
-function askAI(){
-  const data = JSON.parse(localStorage.getItem("clario") || "{}")
-  const q = document.getElementById("aiInput").value
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabs.forEach(b => b.classList.remove('active'));
+        sections.forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
 
-  let answer = "Begin met je situatie vastleggen.\\n"
+    document.getElementById('seedDemo').addEventListener('click', () => {
+      state = {
+        profile: {
+          name: 'Bart Jansen',
+          age: '42',
+          family: 'Getrouwd',
+          children: '2',
+          question: 'Ik wil duidelijkheid over nalatenschap en wat ik nu al moet regelen.',
+          notes: 'Eigen woning, twee kinderen, bestaande levensverzekering.'
+        },
+        documents: [
+          { id: uid(), title: 'Testament 2021', type: 'Testament', note: 'Laatste versie ontvangen van notaris.' },
+          { id: uid(), title: 'Levensverzekering', type: 'Polis', note: 'Controleer begunstiging.' }
+        ],
+        reminders: [
+          { id: uid(), title: 'Bel notaris voor controle testament', date: todayPlus(7), done: false },
+          { id: uid(), title: 'Upload polisdocument', date: todayPlus(3), done: true }
+        ]
+      };
+      saveState();
+      syncUI();
+    });
 
-  if(data.family === "Getrouwd"){
-    answer += "Check je testament.\\n"
-  }
+    document.getElementById('resetData').addEventListener('click', () => {
+      state = JSON.parse(JSON.stringify(defaultState));
+      saveState();
+      syncUI();
+    });
 
-  if(data.name){
-    answer += "Volgende stap voor " + data.name + ": maak een actieplan."
-  }
+    document.getElementById('intakeForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.profile = {
+        name: String(fd.get('name') || '').trim(),
+        age: String(fd.get('age') || '').trim(),
+        family: String(fd.get('family') || '').trim(),
+        children: String(fd.get('children') || '').trim(),
+        question: String(fd.get('question') || '').trim(),
+        notes: String(fd.get('notes') || '').trim()
+      };
+      saveState();
+      syncUI();
+      alert('Intake opgeslagen.');
+    });
 
-  document.getElementById("aiOutput").innerText = answer
-}
+    document.getElementById('docForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.documents.unshift({
+        id: uid(),
+        title: String(fd.get('title') || '').trim(),
+        type: String(fd.get('type') || ''),
+        note: String(fd.get('note') || '').trim()
+      });
+      e.target.reset();
+      saveState();
+      syncUI();
+    });
 
-render()
+    document.getElementById('reminderForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.reminders.unshift({
+        id: uid(),
+        title: String(fd.get('title') || '').trim(),
+        date: String(fd.get('date') || ''),
+        done: false
+      });
+      e.target.reset();
+      saveState();
+      syncUI();
+    });
 
-</script>
+    document.getElementById('askAi').addEventListener('click', () => {
+      const question = document.getElementById('aiInput').value.trim();
+      document.getElementById('aiOutput').textContent = generateAdvice(question);
+    });
 
+    function uid() {
+      return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+    }
+
+    function todayPlus(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function completionSteps() {
+      const p = state.profile;
+      return [
+        { label: 'Persoonlijke intake ingevuld', done: Boolean(p.name && p.family) },
+        { label: 'Minimaal 1 document toegevoegd', done: state.documents.length > 0 },
+        { label: 'Minimaal 1 reminder gepland', done: state.reminders.length > 0 },
+        { label: 'Belangrijkste vraag vastgelegd', done: Boolean(p.question) }
+      ];
+    }
+
+    function completionPercent() {
+      const steps = completionSteps();
+      const done = steps.filter(s => s.done).length;
+      return Math.round((done / steps.length) * 100);
+    }
+
+    function nextStepText() {
+      const missing = completionSteps().find(s => !s.done);
+      return missing ? missing.label : 'Basis fase 1 is compleet. Klaar voor expert review of volgende uitbouw.';
+    }
+
+    function aiSuggestionText() {
+      const p = state.profile;
+      if (!p.name) return 'Vul eerst je intake in zodat de app gericht advies kan geven.';
+      if (state.documents.length === 0) return 'Voeg je belangrijkste documenten toe voor meer overzicht.';
+      if (state.reminders.filter(r => !r.done).length === 0) return 'Plan een reminder voor je volgende concrete actie.';
+      return 'Je hebt de basis op orde. De volgende stap is validatie met een expert of notaris.';
+    }
+
+    function generateAdvice(question) {
+      const p = state.profile;
+      const openReminders = state.reminders.filter(r => !r.done).length;
+      const docs = state.documents.length;
+      const q = question || p.question || 'Wat moet ik als eerste regelen?';
+      let answer = 'Vraag: ' + q + '\\n\\n';
+
+      if (!p.name) {
+        answer += 'Begin met de intake. Zonder persoonlijke context kan de app alleen algemeen advies geven.\\n';
+        answer += '- Vul naam, gezinssituatie en hoofdvraag in\\n';
+        answer += '- Voeg daarna minimaal één document toe\\n';
+        answer += '- Plan een eerste reminder';
+        return answer;
+      }
+
+      answer += p.name + ', op basis van je profiel zou ik dit als eerste doen:\\n';
+      answer += '- Zorg dat je gezinssituatie en wensen volledig zijn vastgelegd\\n';
+      answer += '- Controleer of je bestaande documenten nog actueel zijn\\n';
+      answer += '- Zet concrete vervolgstappen in reminders\\n';
+
+      if (p.children && Number(p.children) > 0) {
+        answer += '- Kijk extra goed naar afspraken rond kinderen en erfgenamen\\n';
+      }
+      if (docs === 0) {
+        answer += '- Voeg nu je belangrijkste document toe als startpunt\\n';
+      } else {
+        answer += '- Je hebt al ' + docs + ' document(en) toegevoegd; gebruik die als checklist voor vervolgstappen\\n';
+      }
+      if (openReminders === 0) {
+        answer += '- Plan meteen een reminder zodat het niet blijft liggen\\n';
+      } else {
+        answer += '- Je hebt ' + openReminders + ' open reminder(s); werk eerst de eerstvolgende af\\n';
+      }
+
+      answer += '\\nDit is nog een demo-antwoord zonder echte AI of juridisch advies.';
+      return answer;
+    }
+
+    function renderDocuments() {
+      const container = document.getElementById('docList');
+      if (state.documents.length === 0) {
+        container.innerHTML = '<p class="muted">Nog geen documenten toegevoegd.</p>';
+        return;
+      }
+
+      container.innerHTML = state.documents.map(doc => `
+        <div class="item">
+          <div>
+            <strong>${escapeHtml(doc.title)}</strong>
+            <small>${escapeHtml(doc.type)}<br>${escapeHtml(doc.note || 'Geen notitie')}</small>
+          </div>
+          <div class="item-actions">
+            <button class="tiny" type="button" onclick="removeDocument('${doc.id}')">Verwijder</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderReminders() {
+      const container = document.getElementById('reminderList');
+      if (state.reminders.length === 0) {
+        container.innerHTML = '<p class="muted">Nog geen reminders toegevoegd.</p>';
+        return;
+      }
+
+      container.innerHTML = state.reminders.map(rem => `
+        <div class="item">
+          <div>
+            <strong>${escapeHtml(rem.title)}</strong>
+            <small>Deadline: ${escapeHtml(rem.date)}${rem.done ? ' · Afgerond' : ' · Open'}</small>
+          </div>
+          <div class="item-actions">
+            <button class="tiny done" type="button" onclick="toggleReminder('${rem.id}')">${rem.done ? 'Heropen' : 'Klaar'}</button>
+            <button class="tiny" type="button" onclick="removeReminder('${rem.id}')">Verwijder</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function syncUI() {
+      const p = state.profile;
+
+      document.querySelector('[name="name"]').value = p.name || '';
+      document.querySelector('[name="age"]').value = p.age || '';
+      document.querySelector('[name="family"]').value = p.family || '';
+      document.querySelector('[name="children"]').value = p.children || '';
+      document.querySelector('[name="question"]').value = p.question || '';
+      document.querySelector('[name="notes"]').value = p.notes || '';
+
+      document.getElementById('profileName').textContent = p.name || 'Nog niet ingevuld';
+      document.getElementById('profileAge').textContent = p.age || '-';
+      document.getElementById('profileFamily').textContent = p.family || '-';
+      document.getElementById('docCount').textContent = String(state.documents.length);
+
+      const pct = completionPercent();
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = pct + '% compleet';
+      document.getElementById('progressList').innerHTML = completionSteps()
+        .map(step => '<li>' + (step.done ? '✅' : '⬜') + ' ' + step.label + '</li>')
+        .join('');
+
+      document.getElementById('nextStep').textContent = nextStepText();
+      document.getElementById('reminderCount').textContent = state.reminders.filter(r => !r.done).length + ' open herinneringen';
+      document.getElementById('aiSuggestion').textContent = aiSuggestionText();
+
+      renderDocuments();
+      renderReminders();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function removeDocument(id) {
+      state.documents = state.documents.filter(d => d.id !== id);
+      saveState();
+      syncUI();
+    }
+
+    function toggleReminder(id) {
+      state.reminders = state.reminders.map(r => r.id === id ? ({ ...r, done: !r.done }) : r);
+      saveState();
+      syncUI();
+    }
+
+    function removeReminder(id) {
+      state.reminders = state.reminders.filter(r => r.id !== id);
+      saveState();
+      syncUI();
+    }
+
+    window.removeDocument = removeDocument;
+    window.toggleReminder = toggleReminder;
+    window.removeReminder = removeReminder;
+
+    syncUI();
+  </script>
 </body>
 </html>
