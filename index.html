@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clario MVP</title>
+
+  <style>
+    body {
+      margin:0;
+      font-family: Arial;
+      background:#071a2f;
+      color:white;
+    }
+    .container{
+      padding:20px;
+      max-width:900px;
+      margin:auto;
+    }
+    h1{color:#35e0c4;}
+    input, textarea, select{
+      width:100%;
+      margin:8px 0;
+      padding:10px;
+      border-radius:8px;
+      border:none;
+    }
+    button{
+      padding:10px 15px;
+      border:none;
+      background:#35e0c4;
+      color:#002;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    .card{
+      background:#091b39;
+      padding:15px;
+      border-radius:10px;
+      margin-top:15px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Clario MVP</h1>
+
+<h2>Intake</h2>
+<input id="name" placeholder="Naam"/>
+<input id="age" placeholder="Leeftijd"/>
+<select id="family">
+  <option value="">Gezinssituatie</option>
+  <option>Alleenstaand</option>
+  <option>Getrouwd</option>
+</select>
+<textarea id="question" placeholder="Wat wil je weten?"></textarea>
+
+<button onclick="save()">Opslaan</button>
+
+<div class="card">
+  <h2>Dashboard</h2>
+  <p id="output">Nog geen data</p>
+</div>
+
+<div class="card">
+  <h2>AI hulp (demo)</h2>
+  <textarea id="aiInput" placeholder="Stel je vraag"></textarea>
+  <button onclick="askAI()">Vraag</button>
+  <p id="aiOutput"></p>
+</div>
+
+</div>
+
+<script>
+
+function save(){
+  const data = {
+    name:document.getElementById("name").value,
+    age:document.getElementById("age").value,
+    family:document.getElementById("family").value,
+    question:document.getElementById("question").value
+  }
+
+  localStorage.setItem("clario", JSON.stringify(data))
+  render()
+}
+
+function render(){
+  const data = JSON.parse(localStorage.getItem("clario") || "{}")
+
+  document.getElementById("output").innerText =
+    data.name ? 
+    "Welkom " + data.name + "\\nVraag: " + data.question :
+    "Nog geen data"
+}
+
+function askAI(){
+  const data = JSON.parse(localStorage.getItem("clario") || "{}")
+  const q = document.getElementById("aiInput").value
+
+  let answer = "Begin met je situatie vastleggen.\\n"
+
+  if(data.family === "Getrouwd"){
+    answer += "Check je testament.\\n"
+  }
+
+  if(data.name){
+    answer += "Volgende stap voor " + data.name + ": maak een actieplan."
+  }
+
+  document.getElementById("aiOutput").innerText = answer
+}
+
+render()
+
+</script>
+
+</body>
+</html>
