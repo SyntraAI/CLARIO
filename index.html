@@ -2,19 +2,24 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clario MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Clario MVP Mobile</title>
   <style>
     * { box-sizing: border-box; }
 
     :root{
       --bg:#071a2f;
+      --bg2:#08152b;
       --card:#091b39;
       --line:rgba(255,255,255,.08);
       --text:#f5f8fc;
       --muted:#aab6c8;
       --accent:#35e0c4;
       --accent2:#5b4bff;
+      --danger:#ff6b6b;
+      --success:#14b884;
+      --radius:18px;
+      --shadow:0 16px 50px rgba(0,0,0,.18);
     }
 
     html, body {
@@ -24,52 +29,63 @@
       background:
         radial-gradient(circle at top left, rgba(91,75,255,.25), transparent 28%),
         radial-gradient(circle at bottom right, rgba(53,224,196,.16), transparent 24%),
-        linear-gradient(135deg, #020b1c 0%, #071a2f 45%, #08152b 100%);
+        linear-gradient(135deg, #020b1c 0%, var(--bg) 45%, var(--bg2) 100%);
       color: var(--text);
+    }
+
+    body{
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     .app-shell{
       display:grid;
-      grid-template-columns:270px 1fr;
+      grid-template-columns: 280px 1fr;
       min-height:100vh;
     }
 
     .sidebar{
-      padding:24px;
+      padding:20px;
       border-right:1px solid var(--line);
       background:rgba(2,10,24,.72);
       backdrop-filter: blur(10px);
+      position:sticky;
+      top:0;
+      height:100vh;
+      overflow:auto;
     }
 
     .brand{
       display:flex;
-      gap:14px;
+      gap:12px;
       align-items:center;
-      margin-bottom:24px;
+      margin-bottom:20px;
     }
 
     .brand-mark{
-      width:52px;
-      height:52px;
-      border-radius:18px;
+      width:48px;
+      height:48px;
+      border-radius:16px;
       display:grid;
       place-items:center;
-      font-size:28px;
+      font-size:26px;
       font-weight:800;
       background:linear-gradient(135deg,var(--accent2),var(--accent));
+      box-shadow:0 10px 30px rgba(91,75,255,.25);
     }
 
     .brand-title{
-      font-size:28px;
-      letter-spacing:.22em;
+      font-size:26px;
+      letter-spacing:.16em;
       font-weight:800;
     }
 
     .brand-sub{
       color:var(--accent);
       text-transform:uppercase;
-      font-size:12px;
-      letter-spacing:.18em;
+      font-size:11px;
+      letter-spacing:.16em;
+      margin-top:2px;
     }
 
     .nav{
@@ -78,6 +94,7 @@
     }
 
     .nav-btn{
+      width:100%;
       border:1px solid var(--line);
       background:#0a1f40;
       color:var(--text);
@@ -86,6 +103,7 @@
       text-align:left;
       cursor:pointer;
       transition:.2s ease;
+      font-size:15px;
     }
 
     .nav-btn:hover,
@@ -95,18 +113,19 @@
     }
 
     .sidebar-card{
-      margin-top:24px;
+      margin-top:18px;
       padding:16px;
-      border-radius:18px;
+      border-radius:20px;
       background:linear-gradient(180deg, rgba(91,75,255,.16), rgba(53,224,196,.08));
       border:1px solid var(--line);
+      box-shadow: var(--shadow);
     }
 
     .label{
       color:var(--accent);
       text-transform:uppercase;
       font-size:11px;
-      letter-spacing:.14em;
+      letter-spacing:.16em;
     }
 
     .big{
@@ -119,35 +138,37 @@
       color:var(--muted);
       margin-top:6px;
       font-size:14px;
-      line-height:1.4;
+      line-height:1.45;
     }
 
     .main{
-      padding:28px;
+      padding:24px;
+      min-width:0;
     }
 
     .hero{
       display:flex;
       justify-content:space-between;
-      gap:20px;
+      gap:18px;
       align-items:flex-start;
-      padding:26px;
+      padding:22px;
       border:1px solid var(--line);
       border-radius:24px;
       background:linear-gradient(180deg, rgba(6,19,42,.82), rgba(9,27,57,.9));
-      margin-bottom:22px;
+      margin-bottom:18px;
+      box-shadow: var(--shadow);
     }
 
     .eyebrow{
       color:var(--accent);
-      letter-spacing:.16em;
+      letter-spacing:.14em;
       text-transform:uppercase;
       font-size:12px;
       margin:0 0 8px;
     }
 
     .hero h1{
-      font-size:38px;
+      font-size:34px;
       line-height:1.08;
       margin:0 0 10px;
       max-width:760px;
@@ -160,8 +181,9 @@
 
     .hero-actions{
       display:flex;
-      gap:12px;
+      gap:10px;
       flex-wrap:wrap;
+      flex-shrink:0;
     }
 
     button.primary,
@@ -169,9 +191,11 @@
     .tiny{
       border:none;
       border-radius:14px;
-      padding:12px 18px;
+      padding:12px 16px;
       font-weight:700;
       cursor:pointer;
+      font:inherit;
+      min-height:44px;
     }
 
     button.primary{
@@ -186,10 +210,25 @@
       border:1px solid var(--line);
     }
 
+    .tiny{
+      padding:10px 12px;
+      min-height:38px;
+      border-radius:12px;
+      font-size:14px;
+    }
+
+    .tiny.done{
+      background:#114e46;
+    }
+
+    .tiny.delete{
+      background:#4a2030;
+    }
+
     .grid{
       display:grid;
-      gap:18px;
-      margin-bottom:18px;
+      gap:16px;
+      margin-bottom:16px;
     }
 
     .grid.two{
@@ -203,15 +242,16 @@
     .card{
       border:1px solid var(--line);
       border-radius:22px;
-      padding:22px;
+      padding:20px;
       background:linear-gradient(180deg, rgba(8,24,50,.94), rgba(7,22,45,.88));
-      box-shadow:0 20px 60px rgba(0,0,0,.18);
+      box-shadow: var(--shadow);
+      min-width:0;
     }
 
     .section-title{
       font-size:21px;
       font-weight:800;
-      margin-bottom:16px;
+      margin-bottom:14px;
     }
 
     .progress-wrap{
@@ -233,6 +273,7 @@
       width:0;
       background:linear-gradient(90deg, var(--accent), var(--accent2));
       border-radius:999px;
+      transition: width .25s ease;
     }
 
     .progress-text{
@@ -250,7 +291,7 @@
     .stat-grid{
       display:grid;
       grid-template-columns:repeat(2,1fr);
-      gap:14px;
+      gap:12px;
     }
 
     .stat{
@@ -258,6 +299,7 @@
       border-radius:16px;
       padding:14px;
       background:rgba(255,255,255,.02);
+      min-width:0;
     }
 
     .stat span{
@@ -268,7 +310,9 @@
     }
 
     .stat strong{
-      font-size:18px;
+      font-size:17px;
+      display:block;
+      overflow-wrap:anywhere;
     }
 
     .form-grid{
@@ -280,6 +324,7 @@
     label{
       display:grid;
       gap:8px;
+      min-width:0;
     }
 
     label.wide,
@@ -295,18 +340,21 @@
       color:var(--text);
       border:1px solid rgba(255,255,255,.09);
       border-radius:14px;
-      padding:12px 14px;
+      padding:13px 14px;
       font:inherit;
+      min-height:46px;
     }
 
     textarea{
       resize:vertical;
+      min-height:110px;
     }
 
     .form-actions{
       display:flex;
       justify-content:flex-end;
-      gap:12px;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
     .stack{
@@ -328,21 +376,21 @@
     .item strong{
       display:block;
       margin-bottom:4px;
+      overflow-wrap:anywhere;
     }
 
     .item small{
       color:var(--muted);
-      line-height:1.4;
+      line-height:1.45;
+      display:block;
+      overflow-wrap:anywhere;
     }
 
     .item-actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
-    }
-
-    .tiny.done{
-      background:#114e46;
+      justify-content:flex-end;
     }
 
     .ai-output{
@@ -364,18 +412,169 @@
       display:block;
     }
 
+    .mobile-topbar{
+      display:none;
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:rgba(2,10,24,.9);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+      padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-topbar-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .mobile-brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .mobile-brand .brand-mark{
+      width:38px;
+      height:38px;
+      font-size:22px;
+      border-radius:12px;
+    }
+
+    .mobile-brand-text{
+      min-width:0;
+    }
+
+    .mobile-brand-title{
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:.08em;
+    }
+
+    .mobile-brand-sub{
+      font-size:10px;
+      color:var(--accent);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+    }
+
+    .menu-toggle{
+      border:1px solid var(--line);
+      background:#0a1f40;
+      color:var(--text);
+      border-radius:12px;
+      min-height:44px;
+      min-width:44px;
+      font-size:20px;
+      cursor:pointer;
+    }
+
+    .mobile-drawer{
+      display:none;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%) translateY(20px);
+      background:rgba(9,27,57,.96);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 16px;
+      box-shadow: var(--shadow);
+      opacity:0;
+      pointer-events:none;
+      transition:.25s ease;
+      z-index:40;
+      max-width:min(92vw, 420px);
+      text-align:center;
+    }
+
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
     @media (max-width: 980px){
       .app-shell{
         grid-template-columns:1fr;
       }
 
       .sidebar{
-        border-right:none;
-        border-bottom:1px solid var(--line);
+        display:none;
+      }
+
+      .mobile-topbar{
+        display:block;
+      }
+
+      .mobile-drawer{
+        display:block;
+        position:fixed;
+        inset:0;
+        z-index:30;
+        pointer-events:none;
+      }
+
+      .mobile-drawer.open{
+        pointer-events:auto;
+      }
+
+      .mobile-drawer-backdrop{
+        position:absolute;
+        inset:0;
+        background:rgba(0,0,0,.45);
+        opacity:0;
+        transition:.2s ease;
+      }
+
+      .mobile-drawer.open .mobile-drawer-backdrop{
+        opacity:1;
+      }
+
+      .mobile-drawer-panel{
+        position:absolute;
+        top:0;
+        left:0;
+        bottom:0;
+        width:min(86vw, 320px);
+        background:rgba(2,10,24,.97);
+        border-right:1px solid var(--line);
+        padding:18px;
+        transform:translateX(-100%);
+        transition:.25s ease;
+        overflow:auto;
+      }
+
+      .mobile-drawer.open .mobile-drawer-panel{
+        transform:translateX(0);
+      }
+
+      .main{
+        padding:16px;
       }
 
       .hero{
         flex-direction:column;
+        padding:18px;
+        border-radius:20px;
+      }
+
+      .hero h1{
+        font-size:28px;
+      }
+
+      .hero-actions{
+        width:100%;
+      }
+
+      .hero-actions button{
+        flex:1 1 auto;
       }
 
       .grid.two,
@@ -384,10 +583,108 @@
       .stat-grid{
         grid-template-columns:1fr;
       }
+
+      .card{
+        padding:16px;
+        border-radius:18px;
+      }
+
+      .section-title{
+        font-size:19px;
+      }
+
+      .item{
+        flex-direction:column;
+      }
+
+      .item-actions{
+        width:100%;
+        justify-content:flex-start;
+      }
+
+      .form-actions{
+        justify-content:stretch;
+      }
+
+      .form-actions button{
+        width:100%;
+      }
+
+      .nav-btn{
+        padding:15px 16px;
+      }
+    }
+
+    @media (max-width: 520px){
+      .main{
+        padding:12px;
+      }
+
+      .hero{
+        padding:15px;
+      }
+
+      .hero h1{
+        font-size:24px;
+      }
+
+      .eyebrow{
+        font-size:11px;
+      }
+
+      .big{
+        font-size:22px;
+      }
+
+      input,
+      select,
+      textarea{
+        padding:12px;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="mobile-topbar">
+    <div class="mobile-topbar-row">
+      <div class="mobile-brand">
+        <div class="brand-mark">C</div>
+        <div class="mobile-brand-text">
+          <div class="mobile-brand-title">CLARIO</div>
+          <div class="mobile-brand-sub">fase 1 MVP</div>
+        </div>
+      </div>
+      <button id="menuToggle" class="menu-toggle" type="button">☰</button>
+    </div>
+  </div>
+
+  <div id="mobileDrawer" class="mobile-drawer">
+    <div id="mobileDrawerBackdrop" class="mobile-drawer-backdrop"></div>
+    <div class="mobile-drawer-panel">
+      <div class="brand" style="margin-top:4px;">
+        <div class="brand-mark">C</div>
+        <div>
+          <div class="brand-title">CLARIO</div>
+          <div class="brand-sub">fase 1 MVP</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn mobile-nav-btn active" data-tab="dashboard" type="button">Dashboard</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="intake" type="button">Intake</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="documenten" type="button">Documenten</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="herinneringen" type="button">Herinneringen</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="ai" type="button">AI Hulp</button>
+      </nav>
+
+      <div class="sidebar-card">
+        <div class="label">Demo status</div>
+        <div class="big" id="mobileSidebarPercent">0% compleet</div>
+        <div class="small" id="mobileSidebarText">Vul je intake in om te starten.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
@@ -399,11 +696,11 @@
       </div>
 
       <nav class="nav">
-        <button class="nav-btn active" data-tab="dashboard" type="button">Dashboard</button>
-        <button class="nav-btn" data-tab="intake" type="button">Intake</button>
-        <button class="nav-btn" data-tab="documenten" type="button">Documenten</button>
-        <button class="nav-btn" data-tab="herinneringen" type="button">Herinneringen</button>
-        <button class="nav-btn" data-tab="ai" type="button">AI Hulp</button>
+        <button class="nav-btn desktop-nav-btn active" data-tab="dashboard" type="button">Dashboard</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="intake" type="button">Intake</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="documenten" type="button">Documenten</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="herinneringen" type="button">Herinneringen</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="ai" type="button">AI Hulp</button>
       </nav>
 
       <div class="sidebar-card">
@@ -417,8 +714,8 @@
       <header class="hero">
         <div>
           <p class="eyebrow">FROM CHAOS TO CLARITY</p>
-          <h1>Clario fase 1 — werkende single file demo.</h1>
-          <p class="muted">Intake, overzicht, documenten, reminders en simpele AI-hulp in één index.html.</p>
+          <h1>Clario fase 1 — mobiele single-file demo.</h1>
+          <p class="muted">Gebruiksvriendelijk op mobiel en desktop. Intake, documenten, reminders en AI-demo in één index.html.</p>
         </div>
         <div class="hero-actions">
           <button id="seedDemo" class="secondary" type="button">Demo-data laden</button>
@@ -604,8 +901,10 @@
     </main>
   </div>
 
+  <div id="toast" class="toast"></div>
+
   <script>
-    const STORAGE_KEY = 'clario-mvp-single-file-v2';
+    const STORAGE_KEY = 'clario-mvp-mobile-v1';
 
     const defaultState = {
       profile: {
@@ -639,24 +938,60 @@
 
     let state = loadState();
 
-    const tabs = document.querySelectorAll('.nav-btn');
+    const desktopNavButtons = document.querySelectorAll('.desktop-nav-btn');
+    const mobileNavButtons = document.querySelectorAll('.mobile-nav-btn');
+    const allNavButtons = [...desktopNavButtons, ...mobileNavButtons];
     const sections = document.querySelectorAll('.tab');
 
-    function showTab(tabId) {
-      tabs.forEach(btn => btn.classList.remove('active'));
-      sections.forEach(section => section.classList.remove('active'));
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const menuToggle = document.getElementById('menuToggle');
+    const mobileDrawerBackdrop = document.getElementById('mobileDrawerBackdrop');
 
-      const targetBtn = document.querySelector('.nav-btn[data-tab="' + tabId + '"]');
-      const targetSection = document.getElementById(tabId);
-
-      if (targetBtn) targetBtn.classList.add('active');
-      if (targetSection) targetSection.classList.add('active');
+    function openDrawer() {
+      mobileDrawer.classList.add('open');
     }
 
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        showTab(btn.dataset.tab);
+    function closeDrawer() {
+      mobileDrawer.classList.remove('open');
+    }
+
+    if (menuToggle) {
+      menuToggle.addEventListener('click', () => {
+        mobileDrawer.classList.contains('open') ? closeDrawer() : openDrawer();
       });
+    }
+
+    if (mobileDrawerBackdrop) {
+      mobileDrawerBackdrop.addEventListener('click', closeDrawer);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    function showTab(tabId) {
+      allNavButtons.forEach(btn => btn.classList.remove('active'));
+      sections.forEach(section => section.classList.remove('active'));
+
+      allNavButtons.forEach(btn => {
+        if (btn.dataset.tab === tabId) btn.classList.add('active');
+      });
+
+      const targetSection = document.getElementById(tabId);
+      if (targetSection) targetSection.classList.add('active');
+
+      closeDrawer();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    allNavButtons.forEach(btn => {
+      btn.addEventListener('click', () => showTab(btn.dataset.tab));
     });
 
     document.getElementById('seedDemo').addEventListener('click', () => {
@@ -702,6 +1037,7 @@
       saveState();
       syncUI();
       showTab('dashboard');
+      showToast('Demo-data geladen');
     });
 
     document.getElementById('resetData').addEventListener('click', () => {
@@ -709,6 +1045,7 @@
       saveState();
       syncUI();
       showTab('dashboard');
+      showToast('App is gereset');
     });
 
     document.getElementById('intakeForm').addEventListener('submit', (e) => {
@@ -728,7 +1065,7 @@
       saveState();
       syncUI();
       showTab('dashboard');
-      alert('Intake opgeslagen en dashboard bijgewerkt.');
+      showToast('Intake opgeslagen');
     });
 
     document.getElementById('docForm').addEventListener('submit', (e) => {
@@ -747,6 +1084,7 @@
       saveState();
       syncUI();
       showTab('documenten');
+      showToast('Document toegevoegd');
     });
 
     document.getElementById('reminderForm').addEventListener('submit', (e) => {
@@ -765,11 +1103,13 @@
       saveState();
       syncUI();
       showTab('herinneringen');
+      showToast('Herinnering toegevoegd');
     });
 
     document.getElementById('askAi').addEventListener('click', () => {
       const question = document.getElementById('aiInput').value.trim();
       document.getElementById('aiOutput').textContent = generateAdvice(question);
+      showToast('AI antwoord bijgewerkt');
     });
 
     function uid() {
@@ -784,7 +1124,6 @@
 
     function completionSteps() {
       const p = state.profile;
-
       return [
         { label: 'Persoonlijke intake ingevuld', done: Boolean(p.name && p.family) },
         { label: 'Minimaal 1 document toegevoegd', done: state.documents.length > 0 },
@@ -813,18 +1152,9 @@
     function aiSuggestionText() {
       const p = state.profile;
 
-      if (!p.name) {
-        return 'Vul eerst je intake in zodat de app gericht advies kan geven.';
-      }
-
-      if (state.documents.length === 0) {
-        return 'Voeg je belangrijkste documenten toe voor meer overzicht.';
-      }
-
-      if (state.reminders.filter(r => !r.done).length === 0) {
-        return 'Plan een reminder voor je volgende concrete actie.';
-      }
-
+      if (!p.name) return 'Vul eerst je intake in zodat de app gericht advies kan geven.';
+      if (state.documents.length === 0) return 'Voeg je belangrijkste documenten toe voor meer overzicht.';
+      if (state.reminders.filter(r => !r.done).length === 0) return 'Plan een reminder voor je volgende concrete actie.';
       return 'Je hebt de basis op orde. De volgende stap is validatie met een expert of notaris.';
     }
 
@@ -884,7 +1214,7 @@
             <small>${escapeHtml(doc.type)}<br>${escapeHtml(doc.note || 'Geen notitie')}</small>
           </div>
           <div class="item-actions">
-            <button class="tiny" type="button" onclick="removeDocument('${doc.id}')">Verwijder</button>
+            <button class="tiny delete" type="button" onclick="removeDocument('${doc.id}')">Verwijder</button>
           </div>
         </div>
       `).join('');
@@ -906,7 +1236,7 @@
           </div>
           <div class="item-actions">
             <button class="tiny done" type="button" onclick="toggleReminder('${rem.id}')">${rem.done ? 'Heropen' : 'Klaar'}</button>
-            <button class="tiny" type="button" onclick="removeReminder('${rem.id}')">Verwijder</button>
+            <button class="tiny delete" type="button" onclick="removeReminder('${rem.id}')">Verwijder</button>
           </div>
         </div>
       `).join('');
@@ -939,11 +1269,15 @@
       document.getElementById('progressFill').style.width = pct + '%';
       document.getElementById('progressText').textContent = pct + '% compleet';
 
-      document.getElementById('sidebarPercent').textContent = pct + '% compleet';
-      document.getElementById('sidebarText').textContent =
+      const sidebarText =
         pct === 100
           ? 'Basis fase 1 is compleet en klaar voor de volgende stap.'
           : 'Werk je intake, documenten en reminders bij om verder te komen.';
+
+      document.getElementById('sidebarPercent').textContent = pct + '% compleet';
+      document.getElementById('sidebarText').textContent = sidebarText;
+      document.getElementById('mobileSidebarPercent').textContent = pct + '% compleet';
+      document.getElementById('mobileSidebarText').textContent = sidebarText;
 
       document.getElementById('progressList').innerHTML = completionSteps()
         .map(step => '<li>' + (step.done ? '✅' : '⬜') + ' ' + step.label + '</li>')
@@ -970,6 +1304,7 @@
       state.documents = state.documents.filter(doc => doc.id !== id);
       saveState();
       syncUI();
+      showToast('Document verwijderd');
     }
 
     function toggleReminder(id) {
@@ -978,12 +1313,14 @@
       );
       saveState();
       syncUI();
+      showToast('Reminder bijgewerkt');
     }
 
     function removeReminder(id) {
       state.reminders = state.reminders.filter(rem => rem.id !== id);
       saveState();
       syncUI();
+      showToast('Reminder verwijderd');
     }
 
     window.removeDocument = removeDocument;
