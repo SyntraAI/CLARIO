@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>XITI MVP Mobile</title>
+
+  <!--
+    XITI MVP - Single file GitHub Pages version
+    ------------------------------------------------------------
+    Gebruik:
+    1. Host deze file als index.html via GitHub Pages.
+    2. Maak Supabase project aan.
+    3. Vul hieronder SUPABASE_URL en SUPABASE_ANON_KEY in.
+    4. Maak tables aan: profiles, intake_sessions, intake_answers, documents, reminders, ai_summaries, audit_logs, consent_logs.
+    5. Maak Supabase Edge Functions voor AI en Make.com webhooks.
+
+    Belangrijk:
+    - Plaats NOOIT service_role keys in deze HTML.
+    - Make.com webhook URLs liever NIET direct in frontend zetten.
+    - Laat frontend praten met Supabase Edge Functions.
+  -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root{
+      --bg:#071a2f;
+      --bg2:#08152b;
+      --card:#091b39;
+      --line:rgba(255,255,255,.08);
+      --text:#f5f8fc;
+      --muted:#aab6c8;
+      --accent:#35e0c4;
+      --accent2:#5b4bff;
+      --danger:#ff6b6b;
+      --success:#14b884;
+      --radius:18px;
+      --shadow:0 16px 50px rgba(0,0,0,.18);
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(91,75,255,.25), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(53,224,196,.16), transparent 24%),
+        linear-gradient(135deg, #020b1c 0%, var(--bg) 45%, var(--bg2) 100%);
+      color: var(--text);
+    }
+
+    body{
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .app-shell{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      padding:20px;
+      border-right:1px solid var(--line);
+      background:rgba(2,10,24,.72);
+      backdrop-filter: blur(10px);
+      position:sticky;
+      top:0;
+      height:100vh;
+      overflow:auto;
+    }
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:20px;
+    }
+
+    .brand-mark{
+      width:48px;
+      height:48px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      font-size:26px;
+      font-weight:800;
+      background:linear-gradient(135deg,var(--accent2),var(--accent));
+      box-shadow:0 10px 30px rgba(91,75,255,.25);
+    }
+
+    .brand-title{
+      font-size:26px;
+      letter-spacing:.16em;
+      font-weight:800;
+    }
+
+    .brand-sub{
+      color:var(--accent);
+      text-transform:uppercase;
+      font-size:11px;
+      letter-spacing:.16em;
+      margin-top:2px;
+    }
+
+    .nav{
+      display:grid;
+      gap:10px;
+    }
+
+    .nav-btn{
+      width:100%;
+      border:1px solid var(--line);
+      background:#0a1f40;
+      color:var(--text);
+      border-radius:14px;
+      padding:14px 16px;
+      text-align:left;
+      cursor:pointer;
+      transition:.2s ease;
+      font-size:15px;
+    }
+
+    .nav-btn:hover,
+    .nav-btn.active{
+      border-color:rgba(53,224,196,.4);
+      background:linear-gradient(180deg,#0e2851,#0a1f40);
+    }
+
+    .sidebar-card{
+      margin-top:18px;
+      padding:16px;
+      border-radius:20px;
+      background:linear-gradient(180deg, rgba(91,75,255,.16), rgba(53,224,196,.08));
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .label{
+      color:var(--accent);
+      text-transform:uppercase;
+      font-size:11px;
+      letter-spacing:.16em;
+    }
+
+    .big{
+      font-size:24px;
+      font-weight:800;
+      margin-top:8px;
+    }
+
+    .small{
+      color:var(--muted);
+      margin-top:6px;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .main{
+      padding:24px;
+      min-width:0;
+    }
+
+    .hero{
+      display:flex;
+      justify-content:space-between;
+      gap:18px;
+      align-items:flex-start;
+      padding:22px;
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(6,19,42,.82), rgba(9,27,57,.9));
+      margin-bottom:18px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow{
+      color:var(--accent);
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      font-size:12px;
+      margin:0 0 8px;
+    }
+
+    .hero h1{
+      font-size:34px;
+      line-height:1.08;
+      margin:0 0 10px;
+      max-width:760px;
+    }
+
+    .muted{
+      color:var(--muted);
+      line-height:1.5;
+    }
+
+    .hero-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      flex-shrink:0;
+    }
+
+    button.primary,
+    button.secondary,
+    .tiny{
+      border:none;
+      border-radius:14px;
+      padding:12px 16px;
+      font-weight:700;
+      cursor:pointer;
+      font:inherit;
+      min-height:44px;
+    }
+
+    button.primary{
+      background:linear-gradient(135deg,var(--accent),#5df0d7);
+      color:#032329;
+    }
+
+    button.secondary,
+    .tiny{
+      background:#183664;
+      color:white;
+      border:1px solid var(--line);
+    }
+
+    .tiny{
+      padding:10px 12px;
+      min-height:38px;
+      border-radius:12px;
+      font-size:14px;
+    }
+
+    .tiny.done{
+      background:#114e46;
+    }
+
+    .tiny.delete{
+      background:#4a2030;
+    }
+
+    .grid{
+      display:grid;
+      gap:16px;
+      margin-bottom:16px;
+    }
+
+    .grid.two{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:20px;
+      background:linear-gradient(180deg, rgba(8,24,50,.94), rgba(7,22,45,.88));
+      box-shadow: var(--shadow);
+      min-width:0;
+    }
+
+    .section-title{
+      font-size:21px;
+      font-weight:800;
+      margin-bottom:14px;
+    }
+
+    .progress-wrap{
+      display:grid;
+      gap:10px;
+    }
+
+    .progress-bar{
+      width:100%;
+      height:12px;
+      border-radius:999px;
+      background:#102849;
+      overflow:hidden;
+    }
+
+    .progress-bar span{
+      display:block;
+      height:100%;
+      width:0;
+      background:linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius:999px;
+      transition: width .25s ease;
+    }
+
+    .progress-text{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .check-list{
+      margin:14px 0 0;
+      padding-left:18px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .stat-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+    }
+
+    .stat{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:rgba(255,255,255,.02);
+      min-width:0;
+    }
+
+    .stat span{
+      display:block;
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:6px;
+    }
+
+    .stat strong{
+      font-size:17px;
+      display:block;
+      overflow-wrap:anywhere;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:14px;
+    }
+
+    label{
+      display:grid;
+      gap:8px;
+      min-width:0;
+    }
+
+    label.wide,
+    .wide{
+      grid-column:1 / -1;
+    }
+
+    input,
+    select,
+    textarea{
+      width:100%;
+      background:#091b39;
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:14px;
+      padding:13px 14px;
+      font:inherit;
+      min-height:46px;
+    }
+
+    textarea{
+      resize:vertical;
+      min-height:110px;
+    }
+
+    .form-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .stack{
+      display:grid;
+      gap:12px;
+    }
+
+    .item{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.025);
+      border:1px solid var(--line);
+    }
+
+    .item strong{
+      display:block;
+      margin-bottom:4px;
+      overflow-wrap:anywhere;
+    }
+
+    .item small{
+      color:var(--muted);
+      line-height:1.45;
+      display:block;
+      overflow-wrap:anywhere;
+    }
+
+    .item-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .ai-output{
+      margin-top:18px;
+      min-height:120px;
+      white-space:pre-wrap;
+      padding:18px;
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      line-height:1.6;
+    }
+
+    .tab{
+      display:none;
+    }
+
+    .tab.active{
+      display:block;
+    }
+
+    .mobile-topbar{
+      display:none;
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:rgba(2,10,24,.9);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+      padding:12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-topbar-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .mobile-brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .mobile-brand .brand-mark{
+      width:38px;
+      height:38px;
+      font-size:22px;
+      border-radius:12px;
+    }
+
+    .mobile-brand-text{
+      min-width:0;
+    }
+
+    .mobile-brand-title{
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:.08em;
+    }
+
+    .mobile-brand-sub{
+      font-size:10px;
+      color:var(--accent);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+    }
+
+    .menu-toggle{
+      border:1px solid var(--line);
+      background:#0a1f40;
+      color:var(--text);
+      border-radius:12px;
+      min-height:44px;
+      min-width:44px;
+      font-size:20px;
+      cursor:pointer;
+    }
+
+    .mobile-drawer{
+      display:none;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%) translateY(20px);
+      background:rgba(9,27,57,.96);
+      color:var(--text);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 16px;
+      box-shadow: var(--shadow);
+      opacity:0;
+      pointer-events:none;
+      transition:.25s ease;
+      z-index:40;
+      max-width:min(92vw, 420px);
+      text-align:center;
+    }
+
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .auth-box{
+      margin-bottom:18px;
+    }
+
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      padding:8px 10px;
+      border-radius:999px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .status-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:var(--danger);
+    }
+
+    .status-dot.ok{
+      background:var(--success);
+    }
+
+    @media (max-width: 980px){
+      .app-shell{
+        grid-template-columns:1fr;
+      }
+
+      .sidebar{
+        display:none;
+      }
+
+      .mobile-topbar{
+        display:block;
+      }
+
+      .mobile-drawer{
+        display:block;
+        position:fixed;
+        inset:0;
+        z-index:30;
+        pointer-events:none;
+      }
+
+      .mobile-drawer.open{
+        pointer-events:auto;
+      }
+
+      .mobile-drawer-backdrop{
+        position:absolute;
+        inset:0;
+        background:rgba(0,0,0,.45);
+        opacity:0;
+        transition:.2s ease;
+      }
+
+      .mobile-drawer.open .mobile-drawer-backdrop{
+        opacity:1;
+      }
+
+      .mobile-drawer-panel{
+        position:absolute;
+        top:0;
+        left:0;
+        bottom:0;
+        width:min(86vw, 320px);
+        background:rgba(2,10,24,.97);
+        border-right:1px solid var(--line);
+        padding:18px;
+        transform:translateX(-100%);
+        transition:.25s ease;
+        overflow:auto;
+      }
+
+      .mobile-drawer.open .mobile-drawer-panel{
+        transform:translateX(0);
+      }
+
+      .main{
+        padding:16px;
+      }
+
+      .hero{
+        flex-direction:column;
+        padding:18px;
+        border-radius:20px;
+      }
+
+      .hero h1{
+        font-size:28px;
+      }
+
+      .hero-actions{
+        width:100%;
+      }
+
+      .hero-actions button{
+        flex:1 1 auto;
+      }
+
+      .grid.two,
+      .grid.three,
+      .form-grid,
+      .stat-grid{
+        grid-template-columns:1fr;
+      }
+
+      .card{
+        padding:16px;
+        border-radius:18px;
+      }
+
+      .section-title{
+        font-size:19px;
+      }
+
+      .item{
+        flex-direction:column;
+      }
+
+      .item-actions{
+        width:100%;
+        justify-content:flex-start;
+      }
+
+      .form-actions{
+        justify-content:stretch;
+      }
+
+      .form-actions button{
+        width:100%;
+      }
+
+      .nav-btn{
+        padding:15px 16px;
+      }
+    }
+
+    @media (max-width: 520px){
+      .main{
+        padding:12px;
+      }
+
+      .hero{
+        padding:15px;
+      }
+
+      .hero h1{
+        font-size:24px;
+      }
+
+      .eyebrow{
+        font-size:11px;
+      }
+
+      .big{
+        font-size:22px;
+      }
+
+      input,
+      select,
+      textarea{
+        padding:12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-topbar">
+    <div class="mobile-topbar-row">
+      <div class="mobile-brand">
+        <div class="brand-mark">X</div>
+        <div class="mobile-brand-text">
+          <div class="mobile-brand-title">XITI</div>
+          <div class="mobile-brand-sub">life admin MVP</div>
+        </div>
+      </div>
+      <button id="menuToggle" class="menu-toggle" type="button">☰</button>
+    </div>
+  </div>
+
+  <div id="mobileDrawer" class="mobile-drawer">
+    <div id="mobileDrawerBackdrop" class="mobile-drawer-backdrop"></div>
+    <div class="mobile-drawer-panel">
+      <div class="brand" style="margin-top:4px;">
+        <div class="brand-mark">X</div>
+        <div>
+          <div class="brand-title">XITI</div>
+          <div class="brand-sub">life admin MVP</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn mobile-nav-btn active" data-tab="dashboard" type="button">Dashboard</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="account" type="button">Account</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="intake" type="button">Intake</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="documenten" type="button">Documenten</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="herinneringen" type="button">Herinneringen</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="ai" type="button">AI Hulp</button>
+        <button class="nav-btn mobile-nav-btn" data-tab="export" type="button">Export</button>
+      </nav>
+
+      <div class="sidebar-card">
+        <div class="label">MVP status</div>
+        <div class="big" id="mobileSidebarPercent">0% compleet</div>
+        <div class="small" id="mobileSidebarText">Vul je intake in om te starten.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">X</div>
+        <div>
+          <div class="brand-title">XITI</div>
+          <div class="brand-sub">life admin MVP</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn desktop-nav-btn active" data-tab="dashboard" type="button">Dashboard</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="account" type="button">Account</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="intake" type="button">Intake</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="documenten" type="button">Documenten</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="herinneringen" type="button">Herinneringen</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="ai" type="button">AI Hulp</button>
+        <button class="nav-btn desktop-nav-btn" data-tab="export" type="button">Export</button>
+      </nav>
+
+      <div class="sidebar-card">
+        <div class="label">MVP status</div>
+        <div class="big" id="sidebarPercent">0% compleet</div>
+        <div class="small" id="sidebarText">Vul je intake in om te starten.</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">BUILD FAST · STRUCTURE SMART · SECURE BY DEFAULT</p>
+          <h1>XITI MVP — nalatenschap intake, dossier en reminders.</h1>
+          <p class="muted">Single-file HTML voor GitHub Pages, voorbereid op Supabase database en Make.com automatisering.</p>
+          <p class="status-pill" style="margin-top:12px;">
+            <span id="connectionDot" class="status-dot"></span>
+            <span id="connectionText">Offline demo modus</span>
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button id="seedDemo" class="secondary" type="button">Demo-data laden</button>
+          <button id="resetData" class="primary" type="button">Reset app</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="tab active">
+        <div class="grid two">
+          <div class="card">
+            <div class="section-title">Jouw voortgang</div>
+            <div class="progress-wrap">
+              <div class="progress-bar"><span id="progressFill"></span></div>
+              <div id="progressText" class="progress-text">0% compleet</div>
+            </div>
+            <ul id="progressList" class="check-list"></ul>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Profiel</div>
+            <div class="stat-grid">
+              <div class="stat">
+                <span>Naam</span>
+                <strong id="profileName">Nog niet ingevuld</strong>
+              </div>
+              <div class="stat">
+                <span>Leeftijd</span>
+                <strong id="profileAge">-</strong>
+              </div>
+              <div class="stat">
+                <span>Gezinssituatie</span>
+                <strong id="profileFamily">-</strong>
+              </div>
+              <div class="stat">
+                <span>Documenten</span>
+                <strong id="docCount">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid three">
+          <div class="card">
+            <div class="section-title">Volgende stap</div>
+            <p id="nextStep">Start met de intake om jouw situatie vast te leggen.</p>
+          </div>
+          <div class="card">
+            <div class="section-title">Open reminders</div>
+            <p id="reminderCount">0 open herinneringen</p>
+          </div>
+          <div class="card">
+            <div class="section-title">AI suggestie</div>
+            <p id="aiSuggestion">Vul eerst je intake in voor persoonlijk advies.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="account" class="tab">
+        <div class="grid two">
+          <div class="card auth-box">
+            <div class="section-title">Account aanmaken / inloggen</div>
+            <p class="muted">Voor Supabase Auth. Werkt pas zodra je Supabase URL en anon key hebt ingevuld.</p>
+            <form id="authForm" class="form-grid">
+              <label class="wide">
+                <span>E-mail</span>
+                <input type="email" name="email" placeholder="jij@example.com" required />
+              </label>
+              <label class="wide">
+                <span>Wachtwoord</span>
+                <input type="password" name="password" placeholder="Minimaal 6 tekens" required />
+              </label>
+              <div class="wide form-actions">
+                <button id="loginBtn" type="button" class="secondary">Inloggen</button>
+                <button id="signupBtn" type="button" class="primary">Account maken</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Sessiestatus</div>
+            <p id="sessionStatus" class="muted">Nog niet ingelogd.</p>
+            <div class="form-actions">
+              <button id="logoutBtn" type="button" class="secondary">Uitloggen</button>
+              <button id="syncCloudBtn" type="button" class="primary">Sync met database</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="intake" class="tab">
+        <div class="card">
+          <div class="section-title">Persoonlijke intake</div>
+          <form id="intakeForm" class="form-grid">
+            <label>
+              <span>Naam</span>
+              <input type="text" name="name" placeholder="Bijv. Bart Jansen" />
+            </label>
+
+            <label>
+              <span>Leeftijd</span>
+              <input type="number" name="age" placeholder="Bijv. 42" />
+            </label>
+
+            <label>
+              <span>Gezinssituatie</span>
+              <select name="family">
+                <option value="">Kies...</option>
+                <option>Alleenstaand</option>
+                <option>Samenwonend</option>
+                <option>Getrouwd</option>
+                <option>Gescheiden</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Kinderen</span>
+              <input type="number" name="children" min="0" placeholder="0" />
+            </label>
+
+            <label>
+              <span>Woning</span>
+              <select name="housing">
+                <option value="">Kies...</option>
+                <option>Huurwoning</option>
+                <option>Koopwoning</option>
+                <option>Geen vaste woning</option>
+                <option>Anders</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Module</span>
+              <select name="moduleType">
+                <option value="legacy">Nalatenschap</option>
+                <option value="testament_prep">Testament voorbereiding</option>
+                <option value="life_admin">Life admin</option>
+              </select>
+            </label>
+
+            <label class="wide">
+              <span>Belangrijkste vraag</span>
+              <textarea name="question" rows="4" placeholder="Waar wil je vooral duidelijkheid over?"></textarea>
+            </label>
+
+            <label class="wide">
+              <span>Bijzonderheden</span>
+              <textarea name="notes" rows="4" placeholder="Bijv. eigen woning, onderneming, samengesteld gezin..."></textarea>
+            </label>
+
+            <label class="wide">
+              <span>
+                <input id="consentCheckbox" type="checkbox" style="width:auto; min-height:auto; margin-right:8px;" />
+                Ik begrijp dat dit voorbereiding is en geen juridisch advies.
+              </span>
+            </label>
+
+            <div class="wide form-actions">
+              <button type="submit" class="primary">Opslaan</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="documenten" class="tab">
+        <div class="grid two">
+          <div class="card">
+            <div class="section-title">Document toevoegen</div>
+            <form id="docForm" class="form-grid">
+              <label>
+                <span>Titel</span>
+                <input type="text" name="title" placeholder="Bijv. Testament 2021" required />
+              </label>
+
+              <label>
+                <span>Type</span>
+                <select name="type">
+                  <option>Testament</option>
+                  <option>Polis</option>
+                  <option>Contract</option>
+                  <option>ID / Persoonsdocument</option>
+                  <option>Overig</option>
+                </select>
+              </label>
+
+              <label class="wide">
+                <span>Notitie</span>
+                <textarea name="note" rows="3" placeholder="Korte omschrijving"></textarea>
+              </label>
+
+              <div class="wide form-actions">
+                <button type="submit" class="primary">Toevoegen</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Documentenlijst</div>
+            <div id="docList" class="stack"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="herinneringen" class="tab">
+        <div class="grid two">
+          <div class="card">
+            <div class="section-title">Nieuwe herinnering</div>
+            <form id="reminderForm" class="form-grid">
+              <label>
+                <span>Titel</span>
+                <input type="text" name="title" placeholder="Bijv. Bel notaris" required />
+              </label>
+
+              <label>
+                <span>Deadline</span>
+                <input type="date" name="date" required />
+              </label>
+
+              <div class="wide form-actions">
+                <button type="submit" class="primary">Toevoegen</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Taken & reminders</div>
+            <div id="reminderList" class="stack"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="ai" class="tab">
+        <div class="card">
+          <div class="section-title">AI intake samenvatting</div>
+          <p class="muted">In demo-modus genereert de app lokaal een samenvatting. In productie hoort dit via Supabase Edge Function naar Claude/OpenAI te lopen.</p>
+          <textarea id="aiInput" rows="5" placeholder="Stel je vraag, bijvoorbeeld: Wat moet ik als eerste regelen?"></textarea>
+          <div class="form-actions">
+            <button id="askAi" class="secondary" type="button">Vraag AI-demo</button>
+            <button id="confirmAi" class="primary" type="button">Bevestig samenvatting</button>
+          </div>
+          <div id="aiOutput" class="ai-output">Nog geen vraag gesteld.</div>
+        </div>
+      </section>
+
+      <section id="export" class="tab">
+        <div class="card">
+          <div class="section-title">Notaris-ready export</div>
+          <p class="muted">Deze knop kan via Supabase Edge Function een Make.com scenario starten voor PDF-export of veilige dossierdeling.</p>
+          <div class="form-actions">
+            <button id="exportBtn" class="primary" type="button">Start export workflow</button>
+          </div>
+          <div id="exportOutput" class="ai-output">Nog geen export gestart.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    /************************************************************
+     * CONFIG
+     ************************************************************/
+
+    const APP_NAME = 'XITI';
+    const STORAGE_KEY = 'xiti-mvp-mobile-v1';
+
+    // Vul deze 2 waarden in vanuit Supabase Project Settings > API.
+    // De anon key mag in frontend gebruikt worden, mits RLS goed staat.
+    const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+    // Edge functions. Laat deze functions server-side Make.com en AI aanroepen.
+    const EDGE_AI_SUMMARY_PATH = '/functions/v1/ai-summary';
+    const EDGE_MAKE_EXPORT_PATH = '/functions/v1/export-dossier';
+    const EDGE_MAKE_REMINDER_PATH = '/functions/v1/reminder-created';
+
+    const supabaseConfigured =
+      SUPABASE_URL.includes('supabase.co') &&
+      !SUPABASE_URL.includes('YOUR_PROJECT_ID') &&
+      !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY');
+
+    const supabaseClient = supabaseConfigured
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    /************************************************************
+     * STATE
+     ************************************************************/
+
+    const defaultState = {
+      profile: {
+        name: '',
+        age: '',
+        family: '',
+        children: '',
+        housing: '',
+        moduleType: 'legacy',
+        question: '',
+        notes: '',
+        consent: false
+      },
+      documents: [],
+      reminders: [],
+      aiSummary: '',
+      aiConfirmed: false,
+      sessionId: null,
+      userId: null
+    };
+
+    function cloneDefaultState() {
+      return JSON.parse(JSON.stringify(defaultState));
+    }
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? { ...cloneDefaultState(), ...JSON.parse(saved) } : cloneDefaultState();
+      } catch (e) {
+        return cloneDefaultState();
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    let state = loadState();
+    let currentUser = null;
+
+    /************************************************************
+     * UI SETUP
+     ************************************************************/
+
+    const desktopNavButtons = document.querySelectorAll('.desktop-nav-btn');
+    const mobileNavButtons = document.querySelectorAll('.mobile-nav-btn');
+    const allNavButtons = [...desktopNavButtons, ...mobileNavButtons];
+    const sections = document.querySelectorAll('.tab');
+
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const menuToggle = document.getElementById('menuToggle');
+    const mobileDrawerBackdrop = document.getElementById('mobileDrawerBackdrop');
+
+    function openDrawer() {
+      mobileDrawer.classList.add('open');
+    }
+
+    function closeDrawer() {
+      mobileDrawer.classList.remove('open');
+    }
+
+    if (menuToggle) {
+      menuToggle.addEventListener('click', () => {
+        mobileDrawer.classList.contains('open') ? closeDrawer() : openDrawer();
+      });
+    }
+
+    if (mobileDrawerBackdrop) {
+      mobileDrawerBackdrop.addEventListener('click', closeDrawer);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2400);
+    }
+
+    function showTab(tabId) {
+      allNavButtons.forEach(btn => btn.classList.remove('active'));
+      sections.forEach(section => section.classList.remove('active'));
+
+      allNavButtons.forEach(btn => {
+        if (btn.dataset.tab === tabId) btn.classList.add('active');
+      });
+
+      const targetSection = document.getElementById(tabId);
+      if (targetSection) targetSection.classList.add('active');
+
+      closeDrawer();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    allNavButtons.forEach(btn => {
+      btn.addEventListener('click', () => showTab(btn.dataset.tab));
+    });
+
+    /************************************************************
+     * AUTH
+     ************************************************************/
+
+    async function initAuth() {
+      updateConnectionStatus();
+
+      if (!supabaseClient) {
+        updateSessionStatus();
+        return;
+      }
+
+      const { data } = await supabaseClient.auth.getSession();
+      currentUser = data.session?.user || null;
+      state.userId = currentUser?.id || null;
+      saveState();
+      updateSessionStatus();
+      updateConnectionStatus();
+
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        currentUser = session?.user || null;
+        state.userId = currentUser?.id || null;
+        saveState();
+        updateSessionStatus();
+        updateConnectionStatus();
+      });
+    }
+
+    function getAuthFormValues() {
+      const form = document.getElementById('authForm');
+      const fd = new FormData(form);
+      return {
+        email: String(fd.get('email') || '').trim(),
+        password: String(fd.get('password') || '').trim()
+      };
+    }
+
+    async function signUp() {
+      if (!supabaseClient) return showToast('Vul eerst Supabase config in');
+      const { email, password } = getAuthFormValues();
+      const { error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) return showToast(error.message);
+      showToast('Account aangemaakt. Check eventueel je e-mail.');
+    }
+
+    async function signIn() {
+      if (!supabaseClient) return showToast('Vul eerst Supabase config in');
+      const { email, password } = getAuthFormValues();
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) return showToast(error.message);
+      showToast('Ingelogd');
+      await loadFromCloud();
+    }
+
+    async function signOut() {
+      if (!supabaseClient) return showToast('Supabase niet geconfigureerd');
+      await supabaseClient.auth.signOut();
+      currentUser = null;
+      updateSessionStatus();
+      showToast('Uitgelogd');
+    }
+
+    document.getElementById('signupBtn').addEventListener('click', signUp);
+    document.getElementById('loginBtn').addEventListener('click', signIn);
+    document.getElementById('logoutBtn').addEventListener('click', signOut);
+    document.getElementById('syncCloudBtn').addEventListener('click', syncToCloud);
+
+    function updateSessionStatus() {
+      const el = document.getElementById('sessionStatus');
+      if (!supabaseConfigured) {
+        el.textContent = 'Supabase nog niet geconfigureerd. De app gebruikt nu lokale demo-opslag.';
+        return;
+      }
+      if (!currentUser) {
+        el.textContent = 'Supabase actief, maar je bent nog niet ingelogd.';
+        return;
+      }
+      el.textContent = 'Ingelogd als: ' + currentUser.email;
+    }
+
+    function updateConnectionStatus() {
+      const dot = document.getElementById('connectionDot');
+      const text = document.getElementById('connectionText');
+
+      if (supabaseConfigured) {
+        dot.classList.add('ok');
+        text.textContent = currentUser ? 'Online database verbonden' : 'Supabase klaar, login nodig';
+      } else {
+        dot.classList.remove('ok');
+        text.textContent = 'Offline demo modus';
+      }
+    }
+
+    /************************************************************
+     * DEMO ACTIONS
+     ************************************************************/
+
+    document.getElementById('seedDemo').addEventListener('click', () => {
+      state = {
+        ...cloneDefaultState(),
+        userId: currentUser?.id || null,
+        sessionId: state.sessionId || uid(),
+        profile: {
+          name: 'Bart Jansen',
+          age: '42',
+          family: 'Getrouwd',
+          children: '2',
+          housing: 'Koopwoning',
+          moduleType: 'legacy',
+          question: 'Ik wil duidelijkheid over nalatenschap en wat ik nu al moet regelen.',
+          notes: 'Eigen woning, twee kinderen, bestaande levensverzekering.',
+          consent: true
+        },
+        documents: [
+          {
+            id: uid(),
+            title: 'Testament 2021',
+            type: 'Testament',
+            note: 'Laatste versie ontvangen van notaris.',
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: uid(),
+            title: 'Levensverzekering',
+            type: 'Polis',
+            note: 'Controleer begunstiging.',
+            createdAt: new Date().toISOString()
+          }
+        ],
+        reminders: [
+          {
+            id: uid(),
+            title: 'Bel notaris voor controle testament',
+            date: todayPlus(7),
+            done: false,
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: uid(),
+            title: 'Upload polisdocument',
+            date: todayPlus(3),
+            done: true,
+            createdAt: new Date().toISOString()
+          }
+        ],
+        aiSummary: '',
+        aiConfirmed: false
+      };
+
+      saveState();
+      syncUI();
+      showTab('dashboard');
+      showToast('Demo-data geladen');
+    });
+
+    document.getElementById('resetData').addEventListener('click', () => {
+      state = cloneDefaultState();
+      state.userId = currentUser?.id || null;
+      saveState();
+      syncUI();
+      showTab('dashboard');
+      showToast('App is gereset');
+    });
+
+    /************************************************************
+     * FORMS
+     ************************************************************/
+
+    document.getElementById('intakeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const fd = new FormData(e.target);
+
+      state.profile = {
+        name: String(fd.get('name') || '').trim(),
+        age: String(fd.get('age') || '').trim(),
+        family: String(fd.get('family') || '').trim(),
+        children: String(fd.get('children') || '').trim(),
+        housing: String(fd.get('housing') || '').trim(),
+        moduleType: String(fd.get('moduleType') || 'legacy').trim(),
+        question: String(fd.get('question') || '').trim(),
+        notes: String(fd.get('notes') || '').trim(),
+        consent: document.getElementById('consentCheckbox').checked
+      };
+
+      if (!state.sessionId) state.sessionId = uid();
+      state.aiConfirmed = false;
+
+      saveState();
+      syncUI();
+      await saveProfileAndIntakeToCloud();
+      showTab('dashboard');
+      showToast('Intake opgeslagen');
+    });
+
+    document.getElementById('docForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const fd = new FormData(e.target);
+      const doc = {
+        id: uid(),
+        title: String(fd.get('title') || '').trim(),
+        type: String(fd.get('type') || '').trim(),
+        note: String(fd.get('note') || '').trim(),
+        createdAt: new Date().toISOString()
+      };
+
+      state.documents.unshift(doc);
+      e.target.reset();
+      saveState();
+      syncUI();
+      await saveDocumentToCloud(doc);
+      showTab('documenten');
+      showToast('Document toegevoegd');
+    });
+
+    document.getElementById('reminderForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const fd = new FormData(e.target);
+      const reminder = {
+        id: uid(),
+        title: String(fd.get('title') || '').trim(),
+        date: String(fd.get('date') || '').trim(),
+        done: false,
+        createdAt: new Date().toISOString()
+      };
+
+      state.reminders.unshift(reminder);
+      e.target.reset();
+      saveState();
+      syncUI();
+      await saveReminderToCloud(reminder);
+      await triggerReminderAutomation(reminder);
+      showTab('herinneringen');
+      showToast('Herinnering toegevoegd');
+    });
+
+    document.getElementById('askAi').addEventListener('click', async () => {
+      const question = document.getElementById('aiInput').value.trim();
+      const output = await generateAiSummary(question);
+      state.aiSummary = output;
+      state.aiConfirmed = false;
+      saveState();
+      document.getElementById('aiOutput').textContent = output;
+      syncUI();
+      showToast('AI samenvatting bijgewerkt');
+    });
+
+    document.getElementById('confirmAi').addEventListener('click', async () => {
+      if (!state.aiSummary) return showToast('Maak eerst een AI samenvatting');
+      state.aiConfirmed = true;
+      saveState();
+      await saveAiSummaryToCloud();
+      await createTasksFromSummary();
+      syncUI();
+      showToast('Samenvatting bevestigd');
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', async () => {
+      const output = document.getElementById('exportOutput');
+      output.textContent = 'Export workflow gestart...';
+      await triggerExportAutomation();
+      output.textContent = buildExportText();
+      showToast('Export voorbereid');
+    });
+
+    /************************************************************
+     * SUPABASE CLOUD OPERATIONS
+     ************************************************************/
+
+    async function requireUser() {
+      if (!supabaseClient || !currentUser) return null;
+      return currentUser;
+    }
+
+    async function saveProfileAndIntakeToCloud() {
+      const user = await requireUser();
+      if (!user) return;
+
+      const p = state.profile;
+      const sessionId = state.sessionId || uid();
+      state.sessionId = sessionId;
+
+      const profilePayload = {
+        id: user.id,
+        full_name: p.name,
+        birth_date: null,
+        family_status: p.family,
+        children_count: p.children ? Number(p.children) : null,
+        housing_status: p.housing,
+        locale: 'nl',
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: profileError } = await supabaseClient
+        .from('profiles')
+        .upsert(profilePayload);
+
+      if (profileError) return showToast('Database fout: ' + profileError.message);
+
+      const { error: sessionError } = await supabaseClient
+        .from('intake_sessions')
+        .upsert({
+          id: sessionId,
+          user_id: user.id,
+          module_type: p.moduleType || 'legacy',
+          status: 'draft',
+          ai_summary_version: state.aiConfirmed ? 'confirmed-v1' : 'draft-v1'
+        });
+
+      if (sessionError) return showToast('Sessie fout: ' + sessionError.message);
+
+      const answers = [
+        ['name', p.name],
+        ['age', p.age],
+        ['family', p.family],
+        ['children', p.children],
+        ['housing', p.housing],
+        ['question', p.question],
+        ['notes', p.notes]
+      ].filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '');
+
+      const rows = answers.map(([key, value]) => ({
+        session_id: sessionId,
+        user_id: user.id,
+        question_key: key,
+        answer_type: 'text',
+        raw_answer_text: String(value),
+        normalized_answer_json: { value },
+        user_confirmed: false
+      }));
+
+      if (rows.length) {
+        const { error: answerError } = await supabaseClient
+          .from('intake_answers')
+          .insert(rows);
+
+        if (answerError) return showToast('Antwoorden fout: ' + answerError.message);
+      }
+
+      if (p.consent) {
+        await supabaseClient.from('consent_logs').insert({
+          user_id: user.id,
+          consent_type: 'legal_disclaimer',
+          accepted_version: 'mvp-v1',
+          accepted_at: new Date().toISOString()
+        });
+      }
+
+      await logAudit('INTAKE_SAVED', 'intake_session', sessionId, { moduleType: p.moduleType });
+    }
+
+    async function saveDocumentToCloud(doc) {
+      const user = await requireUser();
+      if (!user) return;
+
+      const { error } = await supabaseClient.from('documents').insert({
+        id: doc.id,
+        user_id: user.id,
+        session_id: state.sessionId,
+        file_name: doc.title,
+        file_type: doc.type,
+        storage_path: null,
+        document_category: doc.type,
+        metadata_json: { note: doc.note },
+        uploaded_at: doc.createdAt
+      });
+
+      if (error) return showToast('Document database fout: ' + error.message);
+      await logAudit('DOCUMENT_ADDED', 'document', doc.id, { type: doc.type });
+    }
+
+    async function saveReminderToCloud(reminder) {
+      const user = await requireUser();
+      if (!user) return;
+
+      const { error } = await supabaseClient.from('reminders').insert({
+        id: reminder.id,
+        user_id: user.id,
+        task_id: null,
+        reminder_type: 'manual',
+        title: reminder.title,
+        scheduled_for: reminder.date,
+        status: reminder.done ? 'done' : 'open'
+      });
+
+      if (error) return showToast('Reminder database fout: ' + error.message);
+      await logAudit('REMINDER_CREATED', 'reminder', reminder.id, { date: reminder.date });
+    }
+
+    async function saveAiSummaryToCloud() {
+      const user = await requireUser();
+      if (!user) return;
+
+      const structured = {
+        profile: state.profile,
+        documents_count: state.documents.length,
+        reminders_count: state.reminders.length,
+        confirmed_at: new Date().toISOString()
+      };
+
+      const { error } = await supabaseClient.from('ai_summaries').insert({
+        session_id: state.sessionId,
+        user_id: user.id,
+        provider: 'demo_or_edge',
+        model: 'mvp-v1',
+        summary_text: state.aiSummary,
+        structured_output_json: structured,
+        approved_by_user: true
+      });
+
+      if (error) return showToast('AI summary fout: ' + error.message);
+      await logAudit('AI_SUMMARY_CONFIRMED', 'intake_session', state.sessionId, structured);
+    }
+
+    async function syncToCloud() {
+      if (!supabaseClient || !currentUser) return showToast('Log eerst in met Supabase');
+      await saveProfileAndIntakeToCloud();
+      for (const doc of state.documents) await saveDocumentToCloud(doc);
+      for (const reminder of state.reminders) await saveReminderToCloud(reminder);
+      if (state.aiConfirmed && state.aiSummary) await saveAiSummaryToCloud();
+      showToast('Gesynchroniseerd met database');
+    }
+
+    async function loadFromCloud() {
+      const user = await requireUser();
+      if (!user) return;
+
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile) {
+        state.profile.name = profile.full_name || '';
+        state.profile.family = profile.family_status || '';
+        state.profile.children = profile.children_count ?? '';
+        state.profile.housing = profile.housing_status || '';
+      }
+
+      const { data: sessions } = await supabaseClient
+        .from('intake_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('started_at', { ascending: false })
+        .limit(1);
+
+      if (sessions && sessions[0]) state.sessionId = sessions[0].id;
+
+      const { data: docs } = await supabaseClient
+        .from('documents')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('uploaded_at', { ascending: false });
+
+      if (docs) {
+        state.documents = docs.map(d => ({
+          id: d.id,
+          title: d.file_name,
+          type: d.file_type || d.document_category || 'Overig',
+          note: d.metadata_json?.note || '',
+          createdAt: d.uploaded_at
+        }));
+      }
+
+      const { data: reminders } = await supabaseClient
+        .from('reminders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('scheduled_for', { ascending: true });
+
+      if (reminders) {
+        state.reminders = reminders.map(r => ({
+          id: r.id,
+          title: r.title || r.reminder_type || 'Reminder',
+          date: String(r.scheduled_for || '').slice(0, 10),
+          done: r.status === 'done' || Boolean(r.sent_at),
+          createdAt: r.created_at
+        }));
+      }
+
+      saveState();
+      syncUI();
+    }
+
+    async function logAudit(action, entityType, entityId, metadata) {
+      const user = await requireUser();
+      if (!user) return;
+
+      await supabaseClient.from('audit_logs').insert({
+        actor_type: 'user',
+        actor_id: user.id,
+        action,
+        entity_type: entityType,
+        entity_id: entityId,
+        metadata_json: metadata || {},
+        created_at: new Date().toISOString()
+      });
+    }
+
+    /************************************************************
+     * EDGE FUNCTIONS / MAKE.COM AUTOMATION
+     ************************************************************/
+
+    async function callEdgeFunction(path, payload) {
+      if (!supabaseClient || !currentUser) return null;
+
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) return null;
+
+      const res = await fetch(SUPABASE_URL + path, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': 'Bearer ' + accessToken
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Edge function failed');
+      }
+
+      return res.json();
+    }
+
+    async function triggerReminderAutomation(reminder) {
+      try {
+        await callEdgeFunction(EDGE_MAKE_REMINDER_PATH, {
+          event: 'reminder.created',
+          reminder,
+          userId: currentUser?.id || null,
+          sessionId: state.sessionId
+        });
+      } catch (e) {
+        console.warn('Make reminder automation skipped:', e.message);
+      }
+    }
+
+    async function triggerExportAutomation() {
+      try {
+        const result = await callEdgeFunction(EDGE_MAKE_EXPORT_PATH, {
+          event: 'export.requested',
+          userId: currentUser?.id || null,
+          sessionId: state.sessionId,
+          profile: state.profile,
+          documents: state.documents,
+          reminders: state.reminders,
+          aiSummary: state.aiSummary,
+          aiConfirmed: state.aiConfirmed
+        });
+        await logAudit('EXPORT_REQUESTED', 'intake_session', state.sessionId, { result });
+      } catch (e) {
+        console.warn('Make export automation skipped:', e.message);
+      }
+    }
+
+    /************************************************************
+     * APP LOGIC
+     ************************************************************/
+
+    function uid() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+    }
+
+    function todayPlus(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function completionSteps() {
+      const p = state.profile;
+      return [
+        { label: 'Persoonlijke intake ingevuld', done: Boolean(p.name && p.family) },
+        { label: 'Consent / disclaimer bevestigd', done: Boolean(p.consent) },
+        { label: 'Minimaal 1 document toegevoegd', done: state.documents.length > 0 },
+        { label: 'Minimaal 1 reminder gepland', done: state.reminders.length > 0 },
+        { label: 'Belangrijkste vraag vastgelegd', done: Boolean(p.question) },
+        { label: 'AI samenvatting bevestigd', done: Boolean(state.aiConfirmed) }
+      ];
+    }
+
+    function completionPercent() {
+      const steps = completionSteps();
+      const done = steps.filter(step => step.done).length;
+      return Math.round((done / steps.length) * 100);
+    }
+
+    function nextStepText() {
+      const missing = completionSteps().find(step => !step.done);
+      if (missing) return missing.label;
+      return 'Basis MVP is compleet. Klaar voor export of notaris-ready review.';
+    }
+
+    function aiSuggestionText() {
+      const p = state.profile;
+
+      if (!p.name) return 'Vul eerst je intake in zodat XITI gericht kan helpen.';
+      if (!p.consent) return 'Bevestig eerst de disclaimer voordat AI-output wordt opgeslagen.';
+      if (state.documents.length === 0) return 'Voeg je belangrijkste documenten toe voor meer overzicht.';
+      if (!state.aiConfirmed) return 'Laat de AI-samenvatting maken en bevestig deze pas na controle.';
+      if (state.reminders.filter(r => !r.done).length === 0) return 'Plan een reminder voor je volgende concrete actie.';
+      return 'Je basisdossier staat klaar. De volgende stap is export of expert-review.';
+    }
+
+    async function generateAiSummary(question) {
+      const p = state.profile;
+      const q = question || p.question || 'Wat moet ik als eerste regelen?';
+
+      try {
+        const result = await callEdgeFunction(EDGE_AI_SUMMARY_PATH, {
+          question: q,
+          profile: p,
+          documents: state.documents,
+          reminders: state.reminders,
+          sessionId: state.sessionId
+        });
+
+        if (result?.summary) return result.summary;
+      } catch (e) {
+        console.warn('AI edge function skipped, using local demo:', e.message);
+      }
+
+      return generateLocalAdvice(q);
+    }
+
+    function generateLocalAdvice(question) {
+      const p = state.profile;
+      const openReminders = state.reminders.filter(r => !r.done).length;
+      const docs = state.documents.length;
+
+      let answer = 'AI-samenvatting voor XITI intake\n\n';
+      answer += 'Vraag: ' + question + '\n\n';
+
+      if (!p.name) {
+        answer += 'Begin met de intake. Zonder persoonlijke context kan XITI alleen algemeen helpen.\n';
+        answer += '- Vul naam, gezinssituatie en hoofdvraag in\n';
+        answer += '- Voeg daarna minimaal één document toe\n';
+        answer += '- Plan een eerste reminder\n\n';
+        answer += 'Let op: dit is voorbereiding, geen juridisch advies.';
+        return answer;
+      }
+
+      answer += 'Samenvatting:\n';
+      answer += p.name + ' wil duidelijkheid over nalatenschap / life admin. ';
+      if (p.family) answer += 'Gezinssituatie: ' + p.family + '. ';
+      if (p.children) answer += 'Aantal kinderen: ' + p.children + '. ';
+      if (p.housing) answer += 'Woonsituatie: ' + p.housing + '. ';
+      answer += '\n\n';
+
+      answer += 'Gestructureerde aandachtspunten:\n';
+      answer += '- Controleer of bestaande documenten actueel zijn\n';
+      answer += '- Leg wensen en afhankelijkheden duidelijk vast\n';
+      answer += '- Maak vervolgstappen concreet met reminders\n';
+
+      if (Number(p.children) > 0) {
+        answer += '- Kijk extra goed naar afspraken rond kinderen, voogdij en erfgenamen\n';
+      }
+
+      if (docs === 0) {
+        answer += '- Voeg minimaal één relevant document toe\n';
+      } else {
+        answer += '- Er zijn ' + docs + ' document(en) toegevoegd voor het dossier\n';
+      }
+
+      if (openReminders === 0) {
+        answer += '- Plan minimaal één reminder voor de eerstvolgende actie\n';
+      } else {
+        answer += '- Er staan ' + openReminders + ' open reminder(s) klaar\n';
+      }
+
+      answer += '\nOntbrekende informatie:\n';
+      if (!p.notes) answer += '- Bijzonderheden zoals onderneming, samengesteld gezin of lopende polissen\n';
+      if (!p.question) answer += '- Hoofdvraag / doel van de intake\n';
+      if (p.notes && p.question) answer += '- Geen grote ontbrekende informatie in deze demo\n';
+
+      answer += '\nBevestiging nodig:\nDeze samenvatting mag pas als dossierinformatie worden opgeslagen nadat de gebruiker bevestigt dat dit klopt.\n\n';
+      answer += 'Disclaimer: dit is geen juridisch advies. Een notaris of specialist moet de inhoud valideren.';
+
+      return answer;
+    }
+
+    async function createTasksFromSummary() {
+      if (!state.aiConfirmed) return;
+
+      const existingTitles = new Set(state.reminders.map(r => r.title));
+      const suggestions = [
+        'Controleer testament of maak afspraak met notaris',
+        'Upload belangrijkste polis of contract',
+        'Review XITI samenvatting met partner/gezin'
+      ];
+
+      for (const title of suggestions) {
+        if (!existingTitles.has(title)) {
+          const reminder = {
+            id: uid(),
+            title,
+            date: todayPlus(14),
+            done: false,
+            createdAt: new Date().toISOString()
+          };
+          state.reminders.push(reminder);
+          await saveReminderToCloud(reminder);
+          await triggerReminderAutomation(reminder);
+        }
+      }
+
+      saveState();
+    }
+
+    function buildExportText() {
+      const p = state.profile;
+      return [
+        'XITI notaris-ready export concept',
+        '',
+        'Naam: ' + (p.name || '-'),
+        'Gezinssituatie: ' + (p.family || '-'),
+        'Kinderen: ' + (p.children || '-'),
+        'Woning: ' + (p.housing || '-'),
+        'Hoofdvraag: ' + (p.question || '-'),
+        '',
+        'Documenten: ' + state.documents.length,
+        'Reminders: ' + state.reminders.length,
+        'AI bevestigd: ' + (state.aiConfirmed ? 'Ja' : 'Nee'),
+        '',
+        'AI samenvatting:',
+        state.aiSummary || 'Nog niet gemaakt.',
+        '',
+        'Status: export workflow kan via Make.com worden verwerkt naar PDF of veilige link.'
+      ].join('\n');
+    }
+
+    /************************************************************
+     * RENDERING
+     ************************************************************/
+
+    function renderDocuments() {
+      const container = document.getElementById('docList');
+
+      if (state.documents.length === 0) {
+        container.innerHTML = '<p class="muted">Nog geen documenten toegevoegd.</p>';
+        return;
+      }
+
+      container.innerHTML = state.documents.map(doc => `
+        <div class="item">
+          <div>
+            <strong>${escapeHtml(doc.title)}</strong>
+            <small>${escapeHtml(doc.type)}<br>${escapeHtml(doc.note || 'Geen notitie')}</small>
+          </div>
+          <div class="item-actions">
+            <button class="tiny delete" type="button" onclick="removeDocument('${doc.id}')">Verwijder</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderReminders() {
+      const container = document.getElementById('reminderList');
+
+      if (state.reminders.length === 0) {
+        container.innerHTML = '<p class="muted">Nog geen reminders toegevoegd.</p>';
+        return;
+      }
+
+      container.innerHTML = state.reminders.map(rem => `
+        <div class="item">
+          <div>
+            <strong>${escapeHtml(rem.title)}</strong>
+            <small>Deadline: ${escapeHtml(rem.date)}${rem.done ? ' · Afgerond' : ' · Open'}</small>
+          </div>
+          <div class="item-actions">
+            <button class="tiny done" type="button" onclick="toggleReminder('${rem.id}')">${rem.done ? 'Heropen' : 'Klaar'}</button>
+            <button class="tiny delete" type="button" onclick="removeReminder('${rem.id}')">Verwijder</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function syncUI() {
+      const p = state.profile;
+
+      const fields = ['name', 'age', 'family', 'children', 'housing', 'moduleType', 'question', 'notes'];
+      fields.forEach(field => {
+        const el = document.querySelector('[name="' + field + '"]');
+        if (el) el.value = p[field] || '';
+      });
+
+      const consent = document.getElementById('consentCheckbox');
+      if (consent) consent.checked = Boolean(p.consent);
+
+      document.getElementById('profileName').textContent = p.name || 'Nog niet ingevuld';
+      document.getElementById('profileAge').textContent = p.age || '-';
+      document.getElementById('profileFamily').textContent = p.family || '-';
+      document.getElementById('docCount').textContent = String(state.documents.length);
+
+      const pct = completionPercent();
+
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = pct + '% compleet';
+
+      const sidebarText =
+        pct === 100
+          ? 'Basis MVP is compleet en klaar voor export.'
+          : 'Werk intake, consent, documenten, AI en reminders bij.';
+
+      document.getElementById('sidebarPercent').textContent = pct + '% compleet';
+      document.getElementById('sidebarText').textContent = sidebarText;
+      document.getElementById('mobileSidebarPercent').textContent = pct + '% compleet';
+      document.getElementById('mobileSidebarText').textContent = sidebarText;
+
+      document.getElementById('progressList').innerHTML = completionSteps()
+        .map(step => '<li>' + (step.done ? '✅' : '⬜') + ' ' + step.label + '</li>')
+        .join('');
+
+      document.getElementById('nextStep').textContent = nextStepText();
+      document.getElementById('reminderCount').textContent = state.reminders.filter(r => !r.done).length + ' open herinneringen';
+      document.getElementById('aiSuggestion').textContent = aiSuggestionText();
+
+      document.getElementById('aiOutput').textContent = state.aiSummary || 'Nog geen vraag gesteld.';
+
+      renderDocuments();
+      renderReminders();
+      updateSessionStatus();
+      updateConnectionStatus();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    async function removeDocument(id) {
+      state.documents = state.documents.filter(doc => doc.id !== id);
+      saveState();
+      syncUI();
+      if (supabaseClient && currentUser) {
+        await supabaseClient.from('documents').delete().eq('id', id).eq('user_id', currentUser.id);
+        await logAudit('DOCUMENT_DELETED', 'document', id, {});
+      }
+      showToast('Document verwijderd');
+    }
+
+    async function toggleReminder(id) {
+      state.reminders = state.reminders.map(rem =>
+        rem.id === id ? { ...rem, done: !rem.done } : rem
+      );
+      saveState();
+      syncUI();
+
+      const reminder = state.reminders.find(r => r.id === id);
+      if (supabaseClient && currentUser && reminder) {
+        await supabaseClient
+          .from('reminders')
+          .update({ status: reminder.done ? 'done' : 'open', sent_at: reminder.done ? new Date().toISOString() : null })
+          .eq('id', id)
+          .eq('user_id', currentUser.id);
+        await logAudit('REMINDER_UPDATED', 'reminder', id, { done: reminder.done });
+      }
+      showToast('Reminder bijgewerkt');
+    }
+
+    async function removeReminder(id) {
+      state.reminders = state.reminders.filter(rem => rem.id !== id);
+      saveState();
+      syncUI();
+      if (supabaseClient && currentUser) {
+        await supabaseClient.from('reminders').delete().eq('id', id).eq('user_id', currentUser.id);
+        await logAudit('REMINDER_DELETED', 'reminder', id, {});
+      }
+      showToast('Reminder verwijderd');
+    }
+
+    window.removeDocument = removeDocument;
+    window.toggleReminder = toggleReminder;
+    window.removeReminder = removeReminder;
+
+    /************************************************************
+     * INIT
+     ************************************************************/
+
+    initAuth().then(() => {
+      syncUI();
+    });
+  </script>
+</body>
+</html>
